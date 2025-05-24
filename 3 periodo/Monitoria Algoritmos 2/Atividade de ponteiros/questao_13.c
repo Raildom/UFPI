@@ -15,7 +15,7 @@ char* maiusculo(char* nome){
 int main(){
     char nome[50];
 
-    printf("Digite seu nome: ");
+    printf("Digite seu nomee: ");
     scanf("%[^\n]", nome);
 
     printf("Nome em maiusculo: %s\n", maiusculo(nome));
