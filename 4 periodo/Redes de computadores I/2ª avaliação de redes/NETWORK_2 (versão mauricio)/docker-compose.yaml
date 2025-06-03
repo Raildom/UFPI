@@ -1,0 +1,292 @@
+# networks:
+#   subnet_1:
+#   subnet_2:
+#   subnet_3:
+#   subnet_4:
+
+# services:
+#   router1:
+#     image: router_image
+#     networks:
+#       subnet_1:
+        
+
+#   router2:
+#     image: router_image
+#     networks:
+#       subnet_1:
+#       subnet_2:
+#       subnet_3:
+
+#   router3:
+#     image: router_image
+#     networks:
+#       subnet_1:
+#       subnet_3:
+#       subnet_4:
+
+#   host1:
+#     image: host_image
+#     networks:
+#       subnet_2:
+
+#   host2:
+#     image: host_image
+#     networks:
+#       subnet_3:
+
+#   host3:
+#     image: host_image
+#     networks:
+#       subnet_4:
+
+#   web1:
+#     image: web_image
+#     networks:
+#       subnet_2:
+
+#   web2:
+#     image: web_image
+#     networks:
+#       subnet_3:
+
+#   web3:
+#     image: web_image
+#     networks:
+#       subnet_4:
+
+# Definindo a versão do Docker Compose
+version: "3.8"
+
+# Definindo as redes customizadas com configuração de IPAM
+networks:
+  lan1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+  lan2:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.2.0/24
+          gateway: 192.168.2.1 # Gateway será R2 nesta LAN
+  lan3:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.3.0/24
+          # Gateway será definido manualmente nos hosts/servidores (R2 ou R3)
+  lan4:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.4.0/24
+          gateway: 192.168.4.1 # Gateway será R3 nesta LAN
+
+# Definindo os serviços (containers)
+services:
+  # Roteadores (usando imagem ubuntu e configurando roteamento)
+  router1:
+    image: ubuntu:latest
+    container_name: router1
+    hostname: router1
+    privileged: true # Necessário para alterar sysctl e rotas
+    networks:
+      lan1:
+        ipv4_address: 192.168.1.1
+    # Comando para habilitar encaminhamento e adicionar rotas
+    command: |
+      sh -c '
+        apt-get update && apt-get install -y iproute2 procps net-tools && \
+        echo "Habilitando encaminhamento IP em router1..." && \
+        sysctl -w net.ipv4.ip_forward=1 && \
+        echo "Adicionando rotas estáticas em router1..." && \
+        ip route add 192.168.2.0/24 via 192.168.1.2 && \
+        ip route add 192.168.3.0/24 via 192.168.1.2 && \
+        ip route add 192.168.4.0/24 via 192.168.1.2 && \
+        echo "Configuração de router1 concluída. Mantendo container ativo." && \
+        tail -f /dev/null
+      '
+
+  router2:
+    image: ubuntu:latest
+    container_name: router2
+    hostname: router2
+    privileged: true
+    networks:
+      lan1:
+        ipv4_address: 192.168.1.2
+      lan2:
+        ipv4_address: 192.168.2.1
+      lan3:
+        ipv4_address: 192.168.3.1
+    command: |
+      sh -c '
+        apt-get update && apt-get install -y iproute2 procps net-tools && \
+        echo "Habilitando encaminhamento IP em router2..." && \
+        sysctl -w net.ipv4.ip_forward=1 && \
+        echo "Adicionando rotas estáticas em router2..." && \
+        ip route add 192.168.4.0/24 via 192.168.3.2 && \
+        echo "Configuração de router2 concluída. Mantendo container ativo." && \
+        tail -f /dev/null
+      '
+
+  router3:
+    image: ubuntu:latest
+    container_name: router3
+    hostname: router3
+    privileged: true
+    networks:
+      lan3:
+        ipv4_address: 192.168.3.2
+      lan4:
+        ipv4_address: 192.168.4.1
+    command: |
+      sh -c '
+        apt-get update && apt-get install -y iproute2 procps net-tools && \
+        echo "Habilitando encaminhamento IP em router3..." && \
+        sysctl -w net.ipv4.ip_forward=1 && \
+        echo "Adicionando rotas estáticas em router3..." && \
+        ip route add 192.168.1.0/24 via 192.168.3.1 && \
+        ip route add 192.168.2.0/24 via 192.168.3.1 && \
+        echo "Configuração de router3 concluída. Mantendo container ativo." && \
+        tail -f /dev/null
+      '
+
+  # Hosts (usando imagem ubuntu e configurando /etc/hosts e gateway)
+  host1:
+    image: ubuntu:latest
+    container_name: host1
+    hostname: host1
+    depends_on:
+      - router2
+    networks:
+      lan2:
+        ipv4_address: 192.168.2.10
+    command: |
+      sh -c '
+        apt-get update && apt-get install -y iproute2 links net-tools dnsutils && \
+        echo "Configurando gateway padrão em Host1..." && \
+        ip route add default via 192.168.2.1 && \
+        echo "Configurando /etc/hosts em Host1..." && \
+        echo "192.168.2.100 SITE_A" >> /etc/hosts && \
+        echo "192.168.3.100 SITE_B" >> /etc/hosts && \
+        echo "192.168.4.100 SITE_C" >> /etc/hosts && \
+        echo "Configuração de Host1 concluída. Mantendo container ativo." && \
+        tail -f /dev/null
+      '
+
+  host2:
+    image: ubuntu:latest
+    container_name: host2
+    hostname: host2
+    depends_on:
+      - router2
+      - router3
+    networks:
+      lan3:
+        ipv4_address: 192.168.3.10
+    command: |
+      sh -c '
+        apt-get update && apt-get install -y iproute2 links net-tools dnsutils && \
+        echo "Configurando gateway padrão em Host2 (via router2)..." && \
+        ip route add default via 192.168.3.1 && \
+        echo "Configurando /etc/hosts em Host2..." && \
+        echo "192.168.2.100 SITE_A" >> /etc/hosts && \
+        echo "192.168.3.100 SITE_B" >> /etc/hosts && \
+        echo "192.168.4.100 SITE_C" >> /etc/hosts && \
+        echo "Configuração de Host2 concluída. Mantendo container ativo." && \
+        tail -f /dev/null
+      '
+
+  host3:
+    image: ubuntu:latest
+    container_name: host3
+    hostname: host3
+    depends_on:
+      - router3
+    networks:
+      lan4:
+        ipv4_address: 192.168.4.10
+    command: |
+      sh -c '
+        apt-get update && apt-get install -y iproute2 links net-tools dnsutils && \
+        echo "Configurando gateway padrão em Host3..." && \
+        ip route add default via 192.168.4.1 && \
+        echo "Configurando /etc/hosts em Host3..." && \
+        echo "192.168.2.100 SITE_A" >> /etc/hosts && \
+        echo "192.168.3.100 SITE_B" >> /etc/hosts && \
+        echo "192.168.4.100 SITE_C" >> /etc/hosts && \
+        echo "Configuração de Host3 concluída. Mantendo container ativo." && \
+        tail -f /dev/null
+      '
+
+  # Servidores Web (usando imagem httpd e mapeando volumes/portas)
+  web1:
+    image: httpd:latest
+    container_name: web1
+    hostname: SITE_A
+    depends_on:
+      - router2
+    networks:
+      lan2:
+        ipv4_address: 192.168.2.100
+    volumes:
+      - ./web1_data:/usr/local/apache2/htdocs/
+    ports:
+      - "8081:80" # Mapeia porta 80 do container para 8081 do host
+    command: |
+      sh -c '
+        # Configura gateway padrão para o servidor web
+        apt-get update && apt-get install -y iproute2 && \
+        ip route add default via 192.168.2.1 && \
+        # Inicia o servidor Apache em foreground
+        httpd-foreground
+      '
+
+  web2:
+    image: httpd:latest
+    container_name: web2
+    hostname: SITE_B
+    depends_on:
+      - r2
+      - r3
+    networks:
+      lan3:
+        ipv4_address: 192.168.3.100
+    volumes:
+      - ./web2_data:/usr/local/apache2/htdocs/
+    ports:
+      - "8082:80"
+    command: |
+      sh -c '
+        # Configura gateway padrão para o servidor web (via R2)
+        apt-get update && apt-get install -y iproute2 && \
+        ip route add default via 192.168.3.1 && \
+        # Inicia o servidor Apache em foreground
+        httpd-foreground
+      '
+
+  web3:
+    image: httpd:latest
+    container_name: web3
+    hostname: SITE_C
+    depends_on:
+      - r3
+    networks:
+      lan4:
+        ipv4_address: 192.168.4.100
+    volumes:
+      - ./web3_data:/usr/local/apache2/htdocs/
+    ports:
+      - "8083:80"
+    command: |
+      sh -c '
+        # Configura gateway padrão para o servidor web
+        apt-get update && apt-get install -y iproute2 && \
+        ip route add default via 192.168.4.1 && \
+        # Inicia o servidor Apache em foreground
+        httpd-foreground
+      '
+
