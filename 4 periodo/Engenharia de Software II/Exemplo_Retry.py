@@ -1,3 +1,4 @@
+#RETRY
 import time
 import random
 
