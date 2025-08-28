@@ -1,39 +1,35 @@
 #include <stdio.h>
+#define LINHAS 5
+#define COLUNAS 5
 
 int main(){
-    int m, n;
+    int matriz[LINHAS][COLUNAS] = {
+        {1, 0, 0, 0, 1},
+        {0, 1, 1, 1, 0},
+        {1, 0, 1, 0, 0},
+        {0, 1, 0, 1, 0},
+        {1, 1, 1, 0, 1}
+    };
 
-    printf("Digite a quantidade de linhas: \n");
-    scanf("%d", &m);
-    printf("Digite a quantidade de colunas: \n");
-    scanf("%d", &n);
+    int contador_padrao = 0;
 
-    int matriz[m][n], quant = 0, soma_pares = 0, produto_impares = 1;
-
-    for(int i = 0; i < m; i++){
-        for(int j = 0; j < n; j++){
-            printf("Digite o numero [%d][%d]\n", i, j);
-            scanf("%d", &matriz[i][j]);
-            quant++;
-
-            if(matriz[i][j] % 2 == 0){
-                soma_pares += matriz[i][j];
-            }else{
-                produto_impares *= matriz[i][j];
-            }
-        }
-    }
-
-    for(int i = 0; i < m; i++){
-        for(int j = 0; j < n; j++){
+    printf("--- Matriz de Entrada ---\n");
+    for(int i = 0; i < LINHAS; i++){
+        for(int j = 0; j < COLUNAS; j++){
             printf("%d ", matriz[i][j]);
         }
         printf("\n");
     }
 
-    printf("Soma dos pares: %d\n", soma_pares);
-    printf("produto dos imapres: %d\n", produto_impares);
-    printf("Quantidade de numeros na matriz %d\n", quant);
+   
+    for(int i = 0; i < LINHAS - 1; i++){
+        for(int j = 0; j < COLUNAS - 1; j++){
+            if(matriz[i][j] == 1 && matriz[i][j+1] == 0 && matriz[i+1][j] == 0 && matriz[i+1][j+1] == 1){
+                contador_padrao++; 
+            }
+        }
+    }
 
+    printf("O padrao [[1, 0], [0, 1]] foi encontrado %d vez(es).\n", contador_padrao);
     return 0;
 }
