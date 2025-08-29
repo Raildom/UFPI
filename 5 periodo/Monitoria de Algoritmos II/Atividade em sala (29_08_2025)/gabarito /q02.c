@@ -11,7 +11,7 @@ int main(){
         {1, 1, 1, 0, 1}
     };
 
-    int contador_padrao = 0;
+    int quant = 0;
 
     printf("--- Matriz de Entrada ---\n");
     for(int i = 0; i < LINHAS; i++){
@@ -25,11 +25,11 @@ int main(){
     for(int i = 0; i < LINHAS - 1; i++){
         for(int j = 0; j < COLUNAS - 1; j++){
             if(matriz[i][j] == 1 && matriz[i][j+1] == 0 && matriz[i+1][j] == 0 && matriz[i+1][j+1] == 1){
-                contador_padrao++; 
+                quant++; 
             }
         }
     }
 
-    printf("O padrao [[1, 0], [0, 1]] foi encontrado %d vez(es).\n", contador_padrao);
+    printf("O padrao [[1, 0], [0, 1]] foi encontrado %d vez(es).\n", quant);
     return 0;
 }
