@@ -28,10 +28,8 @@ int eh_esparsa(int linhas, int colunas, int matriz[linhas][colunas]){
 int main(){
     int linhas, colunas;
 
-    printf("Digite o numero de linhas: ");
-    scanf("%d", &linhas);
-    printf("Digite o numero de colunas: ");
-    scanf("%d", &colunas);
+    printf("Digite o numero de linhas e colunas: ");
+    scanf("%d %d", &linhas, &colunas);
 
     int matriz[linhas][colunas];
 
