@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player de Música - Proposta de Melhoria</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 1512px;
+            height: 982px;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #000000 100%);
+            color: white;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 1.875rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #9ca3af;
+        }
+
+        /* Grid de comparação */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 48px;
+        }
+
+        .card-problems {
+            background: rgba(127, 29, 29, 0.2);
+            border: 2px solid rgba(239, 68, 68, 0.5);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .card-solutions {
+            background: rgba(20, 83, 45, 0.2);
+            border: 2px solid rgba(34, 197, 94, 0.5);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .card-title-red {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #f87171;
+        }
+
+        .card-title-green {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #4ade80;
+        }
+
+        .list {
+            list-style: none;
+        }
+
+        .list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 0.875rem;
+        }
+
+        .bullet-red {
+            color: #f87171;
+            margin-top: 4px;
+        }
+
+        .bullet-green {
+            color: #4ade80;
+            margin-top: 4px;
+        }
+
+        /* Player */
+        .player {
+            display: flex;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            width: 1400px;
+            height: 850px;
+        }
+
+        /* Frame esquerdo - Playlist */
+        .player-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.7);
+            border-right: 1px solid #1f2937;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #1f2937;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Frame direito - Conteúdo principal */
+        .player-main {
+            flex: 1;
+            background: rgba(31, 41, 55, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid #374151;
+            border-left: none;
+            border-radius: 0 16px 16px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-sidebar {
+            border-radius: 16px 0 0 16px;
+        }
+
+        /* Barra superior */
+        .top-bar {
+            background: rgba(17, 24, 39, 0.8);
+            border-bottom: 1px solid #374151;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .player-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #d1d5db;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+        }
+
+        .btn-blue {
+            background: #2563eb;
+        }
+
+        .btn-purple {
+            background: #9333ea;
+        }
+
+        .btn-green {
+            background: #16a34a;
+        }
+
+        /* Área principal */
+        .main-area {
+            padding: 32px;
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Info da música */
+        .music-info {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .album-art {
+            width: 192px;
+            height: 192px;
+            background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
+            border-radius: 8px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            flex-shrink: 0;
+        }
+
+        .music-details h3 {
+            font-size: 1.875rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .music-details .artist {
+            color: #9ca3af;
+            font-size: 1.25rem;
+            margin-bottom: 4px;
+        }
+
+        .music-details .album {
+            color: #6b7280;
+        }
+
+        /* Área de Vídeo */
+        .player-content-wrapper {
+            width: 100%;
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .video-area {
+            width: 100%;
+            margin-bottom: 24px;
+            position: relative;
+            flex: 1;
+        }
+
+        .video-placeholder {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            border: 2px dashed #4b5563;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .video-icon {
+            width: 48px;
+            height: 48px;
+            color: #6b7280;
+            opacity: 0.5;
+        }
+
+        .video-text {
+            color: #6b7280;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* Layout com lista de músicas */
+        .content-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* Lista de músicas - agora dentro do sidebar */
+        .playlist {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .playlist-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #9ca3af;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .playlist-items {
+            list-style: none;
+        }
+
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .playlist-item:hover {
+            background: rgba(55, 65, 81, 0.5);
+        }
+
+        .playlist-item.active {
+            background: linear-gradient(135deg, rgba(147, 51, 234, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%);
+            border: 1px solid rgba(147, 51, 234, 0.5);
+        }
+
+        .playlist-item-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .playlist-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .playlist-item-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #e5e7eb;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .playlist-item-artist {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .playlist-item-duration {
+            font-size: 0.75rem;
+            color: #6b7280;
+            flex-shrink: 0;
+        }
+
+        /* Barra de progresso */
+        .progress-container {
+            margin-bottom: 24px;
+            max-width: 100%;
+        }
+
+        .progress-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .time {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            width: 48px;
+        }
+
+        .time-end {
+            text-align: right;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 8px;
+            background: #374151;
+            border-radius: 9999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 25%;
+            background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
+            border-radius: 9999px;
+            position: relative;
+        }
+
+        .progress-thumb {
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Controles */
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 0;
+            min-height: 100px;
+            position: relative;
+        }
+
+        .controls-left {
+            display: none;
+        }
+
+        .controls-center {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .controls-right {
+            position: absolute;
+            right: 32px;
+            bottom: 48px;
+            display: flex;
+            align-items: center;
+        }
+
+        .controls-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .control-btn {
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: white;
+        }
+
+        .btn-repeat {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(55, 65, 81, 0.5);
+            color: #9ca3af;
+        }
+
+        .btn-repeat.active {
+            background: #9333ea;
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(147, 51, 234, 0.5);
+        }
+
+        .btn-secondary {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(55, 65, 81, 0.5);
+        }
+
+        .btn-play {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
+            box-shadow: 0 25px 50px -12px rgba(147, 51, 234, 0.5);
+        }
+
+        /* Volume */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .volume-icon {
+            color: #9ca3af;
+        }
+
+        .volume-slider {
+            width: 112px;
+            height: 8px;
+            background: linear-gradient(90deg, #a855f7 0%, #a855f7 70%, #374151 70%, #374151 100%);
+            border-radius: 9999px;
+            position: relative;
+        }
+
+        .volume-thumb {
+            position: absolute;
+            left: 70%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .volume-text {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            width: 40px;
+        }
+
+        /* Status */
+        .status-container {
+            text-align: center;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-playing {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 2px solid rgba(34, 197, 94, 0.5);
+        }
+
+        .status-paused {
+            background: rgba(55, 65, 81, 0.5);
+            color: #9ca3af;
+            border: 2px solid rgba(75, 85, 99, 0.5);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-green {
+            background: #4ade80;
+        }
+
+        .dot-gray {
+            background: #9ca3af;
+        }
+
+        /* Explicações */
+        .explanations {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 24px;
+            margin-top: 48px;
+        }
+
+        .explanation-card {
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .card-blue {
+            background: rgba(30, 58, 138, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
+
+        .card-purple {
+            background: rgba(88, 28, 135, 0.2);
+            border: 1px solid rgba(168, 85, 247, 0.5);
+        }
+
+        .card-green-exp {
+            background: rgba(20, 83, 45, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+        }
+
+        .explanation-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .icon-box {
+            padding: 8px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-blue {
+            background: #2563eb;
+        }
+
+        .icon-purple {
+            background: #9333ea;
+        }
+
+        .icon-green {
+            background: #16a34a;
+        }
+
+        .explanation-title-blue {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #60a5fa;
+        }
+
+        .explanation-title-purple {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #c084fc;
+        }
+
+        .explanation-title-green {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #4ade80;
+        }
+
+        .explanation-text {
+            font-size: 0.875rem;
+            color: #d1d5db;
+            line-height: 1.5;
+        }
+
+        /* Princípios */
+        .principles {
+            margin-top: 32px;
+            background: linear-gradient(90deg, rgba(124, 45, 18, 0.2) 0%, rgba(113, 63, 18, 0.2) 100%);
+            border: 1px solid rgba(249, 115, 22, 0.5);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .principles-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #fb923c;
+        }
+
+        .principles-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .principle h3 {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #fdba74;
+        }
+
+        .principle p {
+            font-size: 0.875rem;
+            color: #d1d5db;
+            line-height: 1.5;
+        }
+
+        /* SVG Icons */
+        .icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        .icon-md {
+            width: 22px;
+            height: 22px;
+        }
+
+        .icon-lg {
+            width: 26px;
+            height: 26px;
+        }
+
+        .icon-xl {
+            width: 36px;
+            height: 36px;
+        }
+    </style>
+</head>
+<body>
+        <div class="container">
+        <!-- Player -->
+        <div class="player">
+            <!-- Frame Esquerdo - Sidebar com Playlist -->
+            <div class="player-sidebar">
+                <div class="sidebar-header">
+                    <h3 class="playlist-title">🎵 Playlist</h3>
+                </div>
+                <div class="playlist">
+                    <ul class="playlist-items">
+                        <li class="playlist-item active">
+                            <div class="playlist-item-icon">🎵</div>
+                            <div class="playlist-item-info">
+                                <div class="playlist-item-name">Música Atual</div>
+                                <div class="playlist-item-artist">Artista 1</div>
+                            </div>
+                            <span class="playlist-item-duration">3:48</span>
+                        </li>
+                        <li class="playlist-item">
+                            <div class="playlist-item-icon">🎶</div>
+                            <div class="playlist-item-info">
+                                <div class="playlist-item-name">Segunda Música</div>
+                                <div class="playlist-item-artist">Artista 2</div>
+                            </div>
+                            <span class="playlist-item-duration">4:12</span>
+                        </li>
+                        <li class="playlist-item">
+                            <div class="playlist-item-icon">🎵</div>
+                            <div class="playlist-item-info">
+                                <div class="playlist-item-name">Terceira Faixa</div>
+                                <div class="playlist-item-artist">Artista 3</div>
+                            </div>
+                            <span class="playlist-item-duration">2:56</span>
+                        </li>
+                        <li class="playlist-item">
+                            <div class="playlist-item-icon">🎶</div>
+                            <div class="playlist-item-info">
+                                <div class="playlist-item-name">Quarta Música</div>
+                                <div class="playlist-item-artist">Artista 4</div>
+                            </div>
+                            <span class="playlist-item-duration">5:23</span>
+                        </li>
+                        <li class="playlist-item">
+                            <div class="playlist-item-icon">🎵</div>
+                            <div class="playlist-item-info">
+                                <div class="playlist-item-name">Quinta Canção</div>
+                                <div class="playlist-item-artist">Artista 5</div>
+                            </div>
+                            <span class="playlist-item-duration">3:15</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Frame Direito - Conteúdo Principal -->
+            <div class="player-main">
+                <!-- Barra Superior -->
+                <div class="top-bar">
+                    <div class="top-buttons">
+                        <!-- Botão Arquivo -->
+                        <button class="btn btn-blue">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                <path d="M12 11v6"></path>
+                                <path d="M9 14h6"></path>
+                            </svg>
+                            <span>Arquivo</span>
+                        </button>
+
+                        <!-- Botão Exibir -->
+                        <button class="btn btn-purple">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <span>Exibir</span>
+                        </button>
+
+                        <!-- Botão Ajuda -->
+                        <button class="btn btn-green">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            <span>Ajuda</span>
+                        </button>
+                    </div>
+
+                    <h2 class="player-title">Music Player</h2>
+                </div>
+
+                <!-- Área Principal -->
+                <div class="main-area">
+                    <!-- Container do Player (vídeo + controles) -->
+                    <div class="player-content-wrapper">
+                        <!-- Área de Vídeo -->
+                        <div class="video-area">
+                            <div class="video-placeholder">
+                                <svg class="video-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                <p class="video-text">Área de Vídeo</p>
+                            </div>
+                        </div>
+
+                        <!-- Barra de Progresso -->
+                        <div class="progress-container">
+                            <div class="progress-row">
+                                <span class="time">1:24</span>
+                                <div class="progress-bar">
+                                    <div class="progress-fill">
+                                        <div class="progress-thumb"></div>
+                                    </div>
+                                </div>
+                                <span class="time time-end">3:48</span>
+                            </div>
+                        </div>
+
+                        <!-- Controles -->
+                        <div class="controls">
+                            <!-- Controles centrais -->
+                            <div class="controls-center">
+                                <!-- Repetir -->
+                            <button class="control-btn btn-repeat active">
+                                <svg class="icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="17 1 21 5 17 9"></polyline>
+                                    <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                                    <polyline points="7 23 3 19 7 15"></polyline>
+                                    <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                                </svg>
+                            </button>
+
+                            <!-- Voltar -->
+                            <button class="control-btn btn-secondary">
+                                <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                                    <line x1="5" y1="19" x2="5" y2="5"></line>
+                                </svg>
+                            </button>
+
+                            <!-- Play -->
+                            <button class="control-btn btn-play">
+                                <svg class="icon-xl" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                            </button>
+
+                            <!-- Avançar -->
+                            <button class="control-btn btn-secondary">
+                                <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                                    <line x1="19" y1="5" x2="19" y2="19"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Fim do wrapper -->
+                    </div>
+
+                    <!-- Volume à direita (fora do wrapper, posicionado absolutamente) -->
+                    <div class="controls-right">
+                        <div class="volume-control">
+                            <svg class="icon-md volume-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            </svg>
+                            <div class="volume-slider">
+                                <div class="volume-thumb"></div>
+                            </div>
+                            <span class="volume-text">70%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+</body>
+</html>
