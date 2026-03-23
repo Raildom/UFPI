@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Q1 – Posts com Contagem de Comentários</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #141418;
+      --card: #1a1a22;
+      --border: #2a2a38;
+      --accent: #e8ff47;
+      --accent2: #47c4ff;
+      --text: #f0f0f0;
+      --muted: #888;
+      --green: #4ade80;
+      --yellow: #facc15;
+      --orange: #fb923c;
+      --red: #f87171;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      padding: 2rem 1rem 4rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    header .tag {
+      font-size: .68rem;
+      color: var(--accent);
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.4rem, 4vw, 2.2rem);
+      font-weight: 800;
+      margin-top: .4rem;
+    }
+
+    header h1 span {
+      color: var(--accent);
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: .75rem;
+      margin-top: .4rem;
+    }
+
+    .wrapper {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    button {
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      font-size: .82rem;
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      padding: .65rem 1.4rem;
+      transition: all .15s;
+    }
+
+    button:hover {
+      background: #d4eb2c;
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      vertical-align: middle;
+      margin-left: .5rem;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #posts-container {
+      margin-top: 1.5rem;
+      display: grid;
+      gap: .8rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.1rem;
+      animation: fadeIn .3s ease both;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: .5rem;
+      margin-bottom: .5rem;
+    }
+
+    .card h4 {
+      font-size: .88rem;
+      color: var(--accent);
+      line-height: 1.4;
+      flex: 1;
+    }
+
+    .card p {
+      font-size: .78rem;
+      color: #ccc;
+      line-height: 1.7;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .2rem .6rem;
+      border-radius: 20px;
+      font-size: .68rem;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .badge-green {
+      background: rgba(74, 222, 128, .15);
+      color: var(--green);
+      border: 1px solid rgba(74, 222, 128, .35);
+    }
+
+    .badge-yellow {
+      background: rgba(250, 204, 21, .15);
+      color: var(--yellow);
+      border: 1px solid rgba(250, 204, 21, .35);
+    }
+
+    .badge-orange {
+      background: rgba(251, 146, 60, .15);
+      color: var(--orange);
+      border: 1px solid rgba(251, 146, 60, .35);
+    }
+
+    .badge-red {
+      background: rgba(248, 113, 113, .15);
+      color: var(--red);
+      border: 1px solid rgba(248, 113, 113, .35);
+    }
+
+    .card .meta {
+      margin-top: .6rem;
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .post-id {
+      font-size: .68rem;
+      color: var(--muted);
+    }
+
+    #status {
+      color: var(--muted);
+      font-size: .78rem;
+      margin-top: .8rem;
+    }
+
+    .legend {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1.2rem;
+      padding: .8rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .72rem;
+      color: var(--muted);
+    }
+
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <header>
+      <h1>Posts com <span>Contagem de Comentários</span></h1>
+    </header>
+
+    <button id="btn-carregar">Carregar Posts com Comentários</button>
+
+    <div class="legend">
+      <span><span class="badge badge-green">●</span> verde = menos de 5 comentários</span>
+      <span><span class="badge badge-orange">●</span> laranja = 5 a 10 comentários</span>
+      <span><span class="badge badge-red">●</span> vermelho = mais de 10 comentários</span>
+    </div>
+
+    <p id="status"></p>
+    <div id="posts-container"></div>
+  </div>
+
+  <script>
+    const BASE = 'https://jsonplaceholder.typicode.com';
+
+    function xhr(url) {
+      return new Promise((resolve, reject) => {
+        const req = new XMLHttpRequest();
+        req.open('GET', url);
+        req.onload = () => {
+          if (req.status >= 200 && req.status < 300) {
+            resolve(JSON.parse(req.responseText));
+          } else {
+            reject(new Error('Erro HTTP ' + req.status));
+          }
+        };
+        req.onerror = () => reject(new Error('Erro de rede'));
+        req.send();
+      });
+    }
+
+    function badgeClass(n) {
+      if (n > 10) return 'badge-red';
+      if (n >= 5) return 'badge-orange';
+      return 'badge-green';
+    }
+
+    document.getElementById('btn-carregar').addEventListener('click', async function () {
+      const btn = this;
+      const container = document.getElementById('posts-container');
+      const status = document.getElementById('status');
+
+      btn.disabled = true;
+      btn.innerHTML = 'Carregando… <span class="spinner"></span>';
+      container.innerHTML = '';
+      status.textContent = '';
+
+      try {
+        const posts = await xhr(`${BASE}/posts?_limit=12`);
+        const comments = await xhr(`${BASE}/comments`);
+
+        const countMap = {};
+        comments.forEach(c => {
+          countMap[c.postId] = (countMap[c.postId] || 0) + 1;
+        });
+
+        posts.forEach((post, i) => {
+          const n = countMap[post.id] || 0;
+          const cls = badgeClass(n);
+
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.style.animationDelay = (i * 40) + 'ms';
+          card.innerHTML = `
+          <div class="card-header">
+            <h4>${post.title}</h4>
+            <span class="badge ${cls}">${n} comentários</span>
+          </div>
+          <p>${post.body.slice(0, 80)}…</p>
+          <div class="meta">
+            <span class="post-id">Post #${post.id}</span>
+          </div>
+        `;
+          container.appendChild(card);
+        });
+
+        status.textContent = `${posts.length} posts carregados · ${comments.length} comentários contabilizados`;
+
+      } catch (e) {
+        status.style.color = '#f87171';
+        status.textContent = 'Erro: ' + e.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Recarregar Posts';
+      }
+    });
+  </script>
+</body>
+
+</html>

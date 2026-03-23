@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q4 – Últimos 5 Todos + Usuário em Destaque</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f; --surface: #141418; --card: #1a1a22;
+    --border: #2a2a38; --accent: #e8ff47; --accent2: #47c4ff;
+    --text: #f0f0f0; --muted: #888;
+    --green: #4ade80; --red: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Space Mono', monospace; padding: 2rem 1rem 4rem; }
+
+  header { text-align: center; margin-bottom: 2.5rem; }
+  header .tag { font-size: .68rem; color: var(--accent); letter-spacing: .2em; text-transform: uppercase; }
+  header h1 { font-family: 'Syne', sans-serif; font-size: clamp(1.4rem,4vw,2.2rem); font-weight: 800; margin-top: .4rem; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--muted); font-size: .75rem; margin-top: .4rem; }
+
+  .wrapper { max-width: 700px; margin: 0 auto; }
+
+  button {
+    cursor: pointer; font-family: 'Space Mono', monospace; font-size: .82rem;
+    background: var(--accent); color: #000; font-weight: 700;
+    border: none; border-radius: 8px; padding: .65rem 1.4rem;
+    transition: all .15s;
+  }
+  button:hover { background: #d4eb2c; transform: translateY(-1px); }
+  button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; margin-left: .5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #status { color: var(--muted); font-size: .75rem; margin-top: .7rem; min-height: 1rem; }
+
+  /* Lista de todos */
+  #lista-todos { margin-top: 1.5rem; }
+
+  .todo-item {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1rem 1.2rem;
+    margin-bottom: .8rem;
+    display: grid; grid-template-columns: auto 1fr;
+    gap: .8rem; align-items: start;
+    animation: slideIn .35s ease both;
+    position: relative; overflow: hidden;
+  }
+  .todo-item::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  }
+  .todo-item.concluida::before { background: var(--green); }
+  .todo-item.pendente::before  { background: var(--red); }
+
+  @keyframes slideIn { from { opacity:0; transform: translateX(-12px); } to { opacity:1; transform: translateX(0); } }
+
+  .todo-icon { font-size: 1.3rem; line-height: 1; padding-top: .05rem; }
+
+  .todo-body {}
+  .todo-title { font-size: .85rem; line-height: 1.5; margin-bottom: .5rem; }
+  .todo-title.done { text-decoration: line-through; color: var(--muted); }
+
+  /* Destaque do usuário */
+  .user-badge {
+    display: inline-flex; align-items: center; gap: .5rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: .35rem .7rem; font-size: .72rem;
+  }
+  .user-badge .name { color: var(--accent2); font-weight: 700; }
+  .user-badge .email { color: var(--muted); }
+
+  .todo-meta { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+
+  .badge {
+    display: inline-block; padding: .12rem .5rem; border-radius: 20px;
+    font-size: .62rem; font-weight: 700;
+  }
+  .badge-green  { background: rgba(74,222,128,.15);  color: var(--green);  border: 1px solid rgba(74,222,128,.3); }
+  .badge-red    { background: rgba(248,113,113,.15); color: var(--red);    border: 1px solid rgba(248,113,113,.3); }
+  .badge-blue   { background: rgba(71,196,255,.15);  color: var(--accent2); border: 1px solid rgba(71,196,255,.3); }
+
+  .section-title {
+    font-family: 'Syne', sans-serif; font-size: .8rem;
+    color: var(--muted); text-transform: uppercase; letter-spacing: .1em;
+    margin-bottom: 1rem; padding-bottom: .5rem;
+    border-bottom: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <header>
+    <p class="tag">Questão 4 · Raildom Da Rocha Sobrinho</p>
+    <h1>Últimos 5 Todos + <span>Usuário em Destaque</span></h1>
+    <p>Requisições paralelas para buscar os dados de cada autor · separador vertical por item</p>
+  </header>
+
+  <button id="btn-carregar">Carregar Últimos 5 Todos</button>
+  <p id="status"></p>
+  <div id="lista-todos"></div>
+</div>
+
+<script>
+  const BASE = 'https://jsonplaceholder.typicode.com';
+
+  function xhr(url) {
+    return new Promise((resolve, reject) => {
+      const req = new XMLHttpRequest();
+      req.open('GET', url);
+      req.onload = () => {
+        if (req.status >= 200 && req.status < 300) resolve(JSON.parse(req.responseText));
+        else reject(new Error('Erro HTTP ' + req.status));
+      };
+      req.onerror = () => reject(new Error('Erro de rede'));
+      req.send();
+    });
+  }
+
+  document.getElementById('btn-carregar').addEventListener('click', async function () {
+    const btn    = this;
+    const lista  = document.getElementById('lista-todos');
+    const status = document.getElementById('status');
+
+    btn.disabled = true;
+    btn.innerHTML = 'Carregando… <span class="spinner"></span>';
+    lista.innerHTML = '';
+    status.textContent = 'Buscando as 5 tarefas mais recentes…';
+
+    try {
+      // 1ª requisição: busca os 5 todos com maior id (mais recentes)
+      const todos = await xhr(`${BASE}/todos?_sort=id&_order=desc&_limit=5`);
+
+      status.textContent = 'Buscando dados dos usuários em paralelo…';
+
+      // Coleta os userIds únicos dos todos retornados
+      const userIds = [...new Set(todos.map(t => t.userId))];
+
+      // Faz as requisições de usuário em PARALELO com Promise.all
+      // (muito mais rápido do que fazer uma de cada vez em sequência)
+      const usersArr = await Promise.all(
+        userIds.map(id => xhr(`${BASE}/users/${id}`))
+      );
+
+      // Monta um mapa userId → objeto usuário para acesso rápido
+      const usersMap = {};
+      usersArr.forEach(u => { usersMap[u.id] = u; });
+
+      status.textContent = `${todos.length} tarefas carregadas · ${usersArr.length} usuário(s) buscado(s)`;
+
+      lista.innerHTML = '<p class="section-title">Tarefas recentes</p>';
+
+      todos.forEach((todo, i) => {
+        const u   = usersMap[todo.userId];
+        const cls = todo.completed ? 'concluida' : 'pendente';
+
+        const item = document.createElement('div');
+        item.className = `todo-item ${cls}`;
+        item.style.animationDelay = (i * 80) + 'ms';
+
+        item.innerHTML = `
+          <span class="todo-icon">${todo.completed ? '✅' : '⭕'}</span>
+          <div class="todo-body">
+            <p class="todo-title ${todo.completed ? 'done' : ''}">${todo.title}</p>
+            <div class="todo-meta">
+              ${u
+                ? `<div class="user-badge">
+                     <span class="name">${u.name}</span>
+                     <span class="email">${u.email}</span>
+                   </div>`
+                : `<span class="badge badge-blue">Usuário ${todo.userId}</span>`
+              }
+              <span class="badge ${todo.completed ? 'badge-green' : 'badge-red'}">
+                ${todo.completed ? 'Concluída' : 'Pendente'}
+              </span>
+              <span style="font-size:.62rem;color:var(--muted);">ID #${todo.id}</span>
+            </div>
+          </div>
+        `;
+        lista.appendChild(item);
+      });
+
+    } catch (e) {
+      status.style.color = '#f87171';
+      status.textContent = 'Erro: ' + e.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Recarregar';
+    }
+  });
+</script>
+</body>
+</html>
